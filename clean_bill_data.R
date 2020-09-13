@@ -5,7 +5,7 @@
 ###############################
 
 # Load in the data set
-bill_data_2019 <- read.csv("Data_files_backup/bill_data_2019.csv")
+bill_data_2019 <- read.csv("../../Data_files_backup/bill_data_2019.csv")
 
 clean_bill_data <- function(scraped_bill_data, year) {
         # Make sure we have the right libraries
@@ -164,10 +164,6 @@ clean_bill_data <- function(scraped_bill_data, year) {
         # up for other years as well
         scraped_bill_data$Date_latest_action <- substr(scraped_bill_data$Latest_action, 0, 10)
         scraped_bill_data$Latest_action <- substr(scraped_bill_data$Latest_action, 12, nchar(scraped_bill_data$Latest_action))
-        #for (i in 1:length(scraped_bill_data$Latest_action)) {
-        #        scraped_bill_data$Latest_action[i] <- substr(scraped_bill_data$Latest_action[i], 12,
-        #                                                  nchar(scraped_bill_data$Latest_action[i]))
-        #}
         
         # We drop another substring from the Latest_action variable where it appears and trim whitespaces again
         scraped_bill_data$Latest_action <- gsub("\\(TXT \\| PDF\\)", "", scraped_bill_data$Latest_action)
