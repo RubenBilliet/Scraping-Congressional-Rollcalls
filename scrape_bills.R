@@ -4,11 +4,9 @@
 scrape_bills <- function(year, rollcall) {
         # This function takes in a year between 1990 and the current year (as a string) as well as a data frame
         # which contains a column called 'issue_link' and contains links to the bills on the congress.gov website.
-        # The argument data frame should also contain a column named 'Roll', 'Date' and 'Issue'.
-        # The function returns a data frame of 18 columns with a number of details regarding each bill that was
-        # voted on in the year past in the arguments.
-        # Note that there can be missing values (NaN) in the issue_link column in the argument data frame. In this
-        # casee the resulting data frame will contain a row of NaNs.
+        # The input dataframe should also contain a column 'Year' to indicate the year of the bill.
+        
+        # The function returns details on the bill as scraped from the congress.gov website.
         
         # We make sure we have the right libraries available
         require(XML)
@@ -18,34 +16,20 @@ scrape_bills <- function(year, rollcall) {
         # We initiate an empty list to store all the scraped data
         bill_data <- list()
 
-        ## We don't want to run this scraping loop for all rollcalls, because it would take more than 25 hours.
-        ## So we'll need to run this for one year at a time
+        ## From the dataframe with the links, we make sure to only get the links for the desired year
         rollcall_subset <- rollcall[rollcall$Year == year,]
+        
+        ## We also eliminate records where the issue_link is NaN
+        rollcall_subset <- rollcall_subset[rollcall_subset$issue_link != 'NaN',]
+        
+        ## Finally, we also eliminate any duplicate issue_links
+        rollcall_subset <- rollcall_subset[!duplicated(rollcall_subset$issue_link),]
+        
+        ## We reset the index of our source dataframe
+        row.names(rollcall_subset) <- NULL
         
         # We initiate the for loop to go over each roll call vote
         for (i in 1:nrow(rollcall_subset)) {
-                # First we make sure we actually have a bill link.
-                # If not, we skip the rollcall
-                if (rollcall_subset$issue_link[i] == "NaN") {
-                        # We put together a list of just the bill identifying information
-                        # with all missing values
-                        bill_details_list <- c(
-                                rollcall_subset$Roll[i],
-                                rollcall_subset$Date[i],
-                                rollcall_subset$Issue[i],
-                                "NaN","NaN","NaN","NaN","NaN","NaN","NaN","NaN",
-                                "NaN","NaN","NaN","NaN","NaN","NaN","NaN"
-                        )
-                        
-                        # We add the record with missing values to our overview list of lists
-                        bill_data[[i]] <- bill_details_list
-                        
-                        # We print a message that the record has been skipped due to missing link
-                        print(paste("Skipped ", i, "/", nrow(rollcall_subset), 
-                                    " due to missing weblink. Record of NaNs added.", sep = ""))
-                        next
-                }
-                
                 
                 # We get the URL from the rollcall dataframe, and fetch the webpage online
                 bill_URL <- rollcall_subset$issue_link[i]
@@ -195,9 +179,6 @@ scrape_bills <- function(year, rollcall) {
                 
                 # Next we put all the information gathered so far into a list
                 bill_details_list <- c(
-                        rollcall_subset$Roll[i],
-                        rollcall_subset$Date[i],
-                        rollcall_subset$Issue[i],
                         bill_header_data,
                         bill_details_data,
                         bill_summary_header,
@@ -224,11 +205,10 @@ scrape_bills <- function(year, rollcall) {
                 
         # Next we extract the header data on the bill basic data
         bill_details <- data.frame(do.call("rbind", bill_data))
-        names(bill_details) <- c("Rollcall", "Date", "Issue", "Title", "Sponsor", "Committees",
-                                 "Committee reports", "Latest action", "Roll call votes",
-                                 "Bill summary header", "Bill summary text", "Bill text shown as",
-                                 "Bill text", "Bill policy area", "Bill legislative subjects",
-                                 "Bill cosponsors", "Bill committees full", "Bill subcommittees full")
+        names(bill_details) <- c("Title", "Sponsor", "Committees","Committee reports", "Latest action", "Roll call votes",
+                                 "Bill summary header", "Bill summary text", "Bill text shown as", "Bill text", 
+                                 "Bill policy area", "Bill legislative subjects", "Bill cosponsors", 
+                                 "Bill committees full", "Bill subcommittees full")
         
         return(bill_details)
 }
