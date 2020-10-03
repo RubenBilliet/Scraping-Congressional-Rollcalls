@@ -5,6 +5,7 @@ scrape_bills <- function(year, rollcall) {
         # This function takes in a year between 1990 and the current year (as a string) as well as a data frame
         # which contains a column called 'issue_link' and contains links to the bills on the congress.gov website.
         # The input dataframe should also contain a column 'Year' to indicate the year of the bill.
+        # The input dataframe should also contain a column 'Issue' with a reference to the bill reference number.
         
         # The function returns details on the bill as scraped from the congress.gov website.
         
@@ -179,6 +180,7 @@ scrape_bills <- function(year, rollcall) {
                 
                 # Next we put all the information gathered so far into a list
                 bill_details_list <- c(
+                        rollcall_subset$Issue[i]
                         bill_header_data,
                         bill_details_data,
                         bill_summary_header,
@@ -205,9 +207,9 @@ scrape_bills <- function(year, rollcall) {
                 
         # Next we extract the header data on the bill basic data
         bill_details <- data.frame(do.call("rbind", bill_data))
-        names(bill_details) <- c("Title", "Sponsor", "Committees","Committee reports", "Latest action", "Roll call votes",
-                                 "Bill summary header", "Bill summary text", "Bill text shown as", "Bill text", 
-                                 "Bill policy area", "Bill legislative subjects", "Bill cosponsors", 
+        names(bill_details) <- c("Issue", "Title", "Sponsor", "Committees","Committee reports", "Latest action", 
+                                 "Roll call votes", "Bill summary header", "Bill summary text", "Bill text shown as",
+                                 "Bill text", "Bill policy area", "Bill legislative subjects", "Bill cosponsors", 
                                  "Bill committees full", "Bill subcommittees full")
         
         return(bill_details)
