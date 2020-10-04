@@ -2,6 +2,7 @@
 source("scrape_roll_calls.R")
 source("scrape_bills.R")
 source("scrape_votes.R")
+source("clean_bill_data.R")
 library(RMariaDB)
 
 ###### SCRAPE ROLL CALL ######
@@ -135,36 +136,34 @@ write.csv(bill_data_2018, "../../Data_files_backup/bill_data_2018.csv")
 bill_data_2019 <- scrape_bills("2019", rollcall)
 write.csv(bill_data_2019, "../../Data_files_backup/bill_data_2019.csv")
 
-#bill_data_2019 <- read.csv("../../Data_files_backup/bill_data_2019.csv")
-#bill_data_2018 <- read.csv("../../Data_files_backup/bill_data_2018.csv")
-#bill_data_2017 <- read.csv("../../Data_files_backup/bill_data_2017.csv")
-#bill_data_2016 <- read.csv("../../Data_files_backup/bill_data_2016.csv")
-#bill_data_2015 <- read.csv("../../Data_files_backup/bill_data_2015.csv")
-#bill_data_2014 <- read.csv("../../Data_files_backup/bill_data_2014.csv")
-#bill_data_2013 <- read.csv("../../Data_files_backup/bill_data_2013.csv")
-#bill_data_2012 <- read.csv("../../Data_files_backup/bill_data_2012.csv")
-#bill_data_2011 <- read.csv("../../Data_files_backup/bill_data_2011.csv")
-#bill_data_2010 <- read.csv("../../Data_files_backup/bill_data_2010.csv")
-#bill_data_2009 <- read.csv("../../Data_files_backup/bill_data_2009.csv")
-#bill_data_2008 <- read.csv("../../Data_files_backup/bill_data_2008.csv")
-#bill_data_2007 <- read.csv("../../Data_files_backup/bill_data_2007.csv")
-#bill_data_2006 <- read.csv("../../Data_files_backup/bill_data_2006.csv")
-#bill_data_2005 <- read.csv("../../Data_files_backup/bill_data_2005.csv")
-#bill_data_2004 <- read.csv("../../Data_files_backup/bill_data_2004.csv")
-#bill_data_2003 <- read.csv("../../Data_files_backup/bill_data_2003.csv")
-#bill_data_2002 <- read.csv("../../Data_files_backup/bill_data_2002.csv")
-#bill_data_2001 <- read.csv("../../Data_files_backup/bill_data_2001.csv")
-#bill_data_2000 <- read.csv("../../Data_files_backup/bill_data_2000.csv")
-#bill_data_1999 <- read.csv("../../Data_files_backup/bill_data_1999.csv")
-#bill_data_1998 <- read.csv("../../Data_files_backup/bill_data_1998.csv")
-#bill_data_1997 <- read.csv("../../Data_files_backup/bill_data_1997.csv")
-#bill_data_1996 <- read.csv("../../Data_files_backup/bill_data_1996.csv")
-#bill_data_1995 <- read.csv("../../Data_files_backup/bill_data_1995.csv")
-#bill_data_1994 <- read.csv("../../Data_files_backup/bill_data_1994.csv")
-#bill_data_1993 <- read.csv("../../Data_files_backup/bill_data_1993.csv")
-#bill_data_1992 <- read.csv("../../Data_files_backup/bill_data_1992.csv")
-#bill_data_1991 <- read.csv("../../Data_files_backup/bill_data_1991.csv")
-#bill_data_1990 <- read.csv("../../Data_files_backup/bill_data_1990.csv")
+# Next we apply our different cleaning functions from the clean_bill_data.R script
+# We're going to assume here that the scraped raw data does not exist in the environment yet
+# and read it in from our csv back-up
+years <- 1990:2019
+for (i in years) {
+        # Convert year to character
+        year <- as.character(i)
+        # Read in data
+        data <- read.csv(paste("../../Data_files_backup/bill_data_", year, ".csv", sep = ""))
+        
+        # Apply the cleaning functions
+        bill_house_committees <- get_bill_committees(data, year, "House")
+        bill_senate_committees <- get_bill_committees(data, year, "Senate")
+        bill_cosponsors <- get_bill_cosponsors(data, year)
+        bill_details <- get_bill_details(data, year)
+        bill_legis_subjects <- get_bill_legis_subjects(data, year)
+        bill_summary <- get_bill_summary(data, year)
+        bill_text <- get_bill_text(data, year)
+        
+        # Save the data as .csv files
+        write.csv(bill_house_committees, paste("../../Data_files_backup/cleaned_bill_house_committees_", year, ".csv", sep = ""), row.names = FALSE)
+        write.csv(bill_senate_committees, paste("../../Data_files_backup/cleaned_bill_senate_committees_", year, ".csv", sep = ""), row.names = FALSE)
+        write.csv(bill_cosponsors, paste("../../Data_files_backup/cleaned_bill_cosponsors_", year, ".csv", sep = ""), row.names = FALSE)
+        write.csv(bill_details, paste("../../Data_files_backup/cleaned_bill_details_", year, ".csv", sep = ""), row.names = FALSE)
+        write.csv(bill_legis_subjects, paste("../../Data_files_backup/cleaned_bill_legis_subjects_", year, ".csv", sep = ""), row.names = FALSE)
+        write.csv(bill_summary, paste("../../Data_files_backup/cleaned_bill_summary_", year, ".csv", sep = ""), row.names = FALSE)
+        write.csv(bill_text, paste("../../Data_files_backup/cleaned_bill_text_", year, ".csv", sep = ""), row.names = FALSE)
+}
 
 
 ###### SCRAPE VOTES ######
