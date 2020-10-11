@@ -5,13 +5,31 @@ source("scrape_votes.R")
 source("clean_bill_data.R")
 library(RMariaDB)
 
-###### SCRAPE ROLL CALL ######
+# Get database connection information
+db_user <- readline(prompt = 'User: ')
+db_password <- readline(prompt = 'Password: ')
+db_name <- readline(prompt = 'Database: ')
+db_host <- readline(prompt = 'Host: ')
+prompted_port <- readline(prompt = 'Port: ')
+db_port <- as.integer(prompted_port)
+
+##################################
+######                      ######
+######   SCRAPE ROLL CALL   ######
+######                      ######
+##################################
 
 # Scrape congressional role calls
 rollcall <- scrape_congress_role_call(years = c(1990:2020))
 
 
-###### SCRAPE BILLS ######
+
+
+##############################
+######                  ######
+######   SCRAPE BILLS   ######
+######                  ######
+##############################
 
 # Next we scrape all bills
 # We do this separately per year, in order to not get blocked by an error and have to start over from the start
@@ -164,6 +182,22 @@ for (i in years) {
         write.csv(bill_summary, paste("../../Data_files_backup/cleaned_bill_summary_", year, ".csv", sep = ""), row.names = FALSE)
         write.csv(bill_text, paste("../../Data_files_backup/cleaned_bill_text_", year, ".csv", sep = ""), row.names = FALSE)
 }
+
+# Open up database connection
+con <- dbConnect(MariaDB(),
+                 user = db_user, 
+                 password = db_password,
+                 dbname = db_name,
+                 host = db_host,
+                 port = db_port)
+
+bill_house_committees_1990 <- read.csv("../../Data_files_backup/cleaned_bill_house_committees_1990.csv")
+
+if (!dbExistsTable(con, "Bill_house_committees")) {
+        rs <- dbCreateTable(con, bill_house_committees_1990)
+}
+
+
 
 
 ###### SCRAPE VOTES ######
@@ -428,13 +462,6 @@ votes <- rbind(vote_1990, vote_1991, vote_1992, vote_1993, vote_1994, vote_1995,
                vote_2014, vote_2015, vote_2016, vote_2017, vote_2018, vote_2019)
 
 # Open up database connection
-db_user <- readline(prompt = 'User: ')
-db_password <- readline(prompt = 'Password: ')
-db_name <- readline(prompt = 'Database: ')
-db_host <- readline(prompt = 'Host: ')
-prompted_port <- readline(prompt = 'Port: ')
-db_port <- as.integer(prompted_port)
-
 con <- dbConnect(MariaDB(),
                  user = db_user, 
                  password = db_password,
