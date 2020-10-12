@@ -183,6 +183,42 @@ for (i in years) {
         write.csv(bill_text, paste("../../Data_files_backup/cleaned_bill_text_", year, ".csv", sep = ""), row.names = FALSE)
 }
 
+
+# We create named vectors to create data tables
+bill_house_committees_table_def <- c("Varchar(255)", "int", "Varchar(255)")
+names(bill_house_committees_table_def) <- c("Issue", "Year", "House_committees")
+
+bill_senate_committees_table_def <- c("Varchar(255)", "int", "Varchar(255)")
+names(bill_senate_committees_table_def) <- c("Issue", "Year", "Senate_committees")
+
+bill_details_table_def <- c("Varchar(255)", "Varchar(2080)", "Varchar(255)", "Varchar(255)", "Varchar(255)",
+                            "Varchar(255)", "Varchar(255)", "Varchar(255)", "Varchar(1040)", "Varchar(255)",
+                            "Varchar(255)", "int", "Varchar(255)", "int", "int", "Varchar(255)")
+names(bill_details_table_def) <- c("Issue", "Title", "Sponsor_name", "Sponsor_party", "Sponsor_state", 
+                                   "Sponsor_district", "Introduction_date", "Branch_latest_action", 
+                                   "Latest_action", "Rollcall_votes", "Policy_area", "Year", "Sponsor_role",
+                                   "Num_house_reports", "Num_senate_reports", "Date_latest_action")
+
+bill_cosponsors_table_def <- c("Varchar(255)", "Varchar(255)", "Varchar(255)", "Varchar(255)", "Varchar(255)",
+                               "Varchar(255)", "int")
+names(bill_cosponsors_table_def) <- c("Issue", "Cosponsor_name", "Cosponsor_party", "Cosponsor_state",
+                                      "Cosponsor_district", "Cosponsor_date", "Year")
+
+bill_legis_subjects_table_def <- c("Varchar(255)", "Varchar(255)", "int")
+names(bill_legis_subjects_table_def) <- c("Issue", "Legislative_subjects", "Year")
+
+bill_summary_table_def <- c("Varchar(255)", "Varchar(255)", "MEDIUMTEXT", "int")
+names(bill_summary_table_def) <- c("Issue", "Summary_header", "Summary_text", "Year")
+
+bill_text_table_def <- c("Varchar(255)", "Varchar(255)", "MEDIUMTEXT", "int")
+names(bill_text_table_def) <- c("Issue", "Text_shown_as", "Text", "Year")
+
+table_names <- c("Bill_house_committees", "Bill_senate_committees", "Bill_details", "Bill_cosponsors",
+                 "Bill_legis_subjects", "Bill_summary", "Bill_text")
+table_defs <- list(bill_house_committees_table_def, bill_senate_committees_table_def, bill_details_table_def,
+                   bill_cosponsors_table_def, bill_legis_subjects_table_def, bill_summary_table_def,
+                   bill_text_table_def)
+
 # Open up database connection
 con <- dbConnect(MariaDB(),
                  user = db_user, 
@@ -191,14 +227,23 @@ con <- dbConnect(MariaDB(),
                  host = db_host,
                  port = db_port)
 
-bill_house_committees_1990 <- read.csv("../../Data_files_backup/cleaned_bill_house_committees_1990.csv")
-
-if (!dbExistsTable(con, "Bill_house_committees")) {
-        rs <- dbCreateTable(con, bill_house_committees_1990)
+# For each table, we remove it if it exists, and then create the new table
+for (i in 1:length(table_names)) {
+        if (dbExistsTable(con, table_names[i])) {
+                dbRemoveTable(con, table_names[i])
+        }
+        dbCreateTable(con, table_names[i], table_defs[[i]])
 }
 
+for (i in 1:length(table_names))
+        for (j in 1990:2019) {
+                path <- paste("../../Data_files_backup/cleaned_", tolower(table_names[i]), "_", j, ".csv", sep = "")
+                data <- read.csv(path)
+                dbWriteTable(con, table_names[i], data, append = TRUE)
+        }
+}
 
-
+dbDisconnect(con)
 
 ###### SCRAPE VOTES ######
 
