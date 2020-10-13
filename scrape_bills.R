@@ -180,7 +180,7 @@ scrape_bills <- function(year, rollcall) {
                 
                 # Next we put all the information gathered so far into a list
                 bill_details_list <- c(
-                        rollcall_subset$Issue[i]
+                        rollcall_subset$Issue[i],
                         bill_header_data,
                         bill_details_data,
                         bill_summary_header,
