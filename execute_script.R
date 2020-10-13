@@ -184,6 +184,8 @@ for (i in years) {
 }
 
 
+# Now that we have all the cleaned data in csv files, we can write all the data to the SQL database
+
 # We create named vectors to create data tables
 bill_house_committees_table_def <- c("Varchar(255)", "int", "Varchar(255)")
 names(bill_house_committees_table_def) <- c("Issue", "Year", "House_committees")
@@ -235,13 +237,53 @@ for (i in 1:length(table_names)) {
         dbCreateTable(con, table_names[i], table_defs[[i]])
 }
 
-for (i in 1:length(table_names))
-        for (j in 1990:2019) {
-                path <- paste("../../Data_files_backup/cleaned_", tolower(table_names[i]), "_", j, ".csv", sep = "")
-                data <- read.csv(path)
-                dbWriteTable(con, table_names[i], data, append = TRUE)
-        }
+## We can now start writing the data to the SQL database
+## It's not possible to do this for all bill data elements in one loop, since the transaction is too big
+## We resolve this separately for each data element
+# Bill house committee data
+for (i in 1990:2019) {
+        data <- read.csv(paste("../../Data_files_backup/cleaned_bill_house_committees_", i, ".csv", sep = ""))
+        dbWriteTable(con, "Bill_house_committees", data, append = TRUE)
 }
+
+# Bill senate committee data
+for (i in 1990:2019) {
+        data <- read.csv(paste("../../Data_files_backup/cleaned_bill_senate_committees_", i, ".csv", sep = ""))
+        dbWriteTable(con, "Bill_senate_committees", data, append = TRUE)
+}
+
+# Bill details
+for (i in 1990:2019) {
+        data <- read.csv(paste("../../Data_files_backup/cleaned_bill_details_", i, ".csv", sep = ""))
+        dbWriteTable(con, "Bill_details", data, append = TRUE)
+}
+
+# Bill cosponsors
+for (i in 1990:2019) {
+        data <- read.csv(paste("../../Data_files_backup/cleaned_bill_cosponsors_", i, ".csv", sep = ""))
+        dbWriteTable(con, "Bill_cosponsors", data, append = TRUE)
+}
+
+# Bill legislative subjects
+for (i in 1990:2019) {
+        data <- read.csv(paste("../../Data_files_backup/cleaned_bill_legis_subjects_", i, ".csv", sep = ""))
+        dbWriteTable(con, "Bill_legis_subjects", data, append = TRUE)
+}
+
+# Bill summary
+for (i in 1990:2019) {
+        data <- read.csv(paste("../../Data_files_backup/cleaned_bill_summary_", i, ".csv", sep = ""))
+        dbWriteTable(con, "Bill_summary", data, append = TRUE)
+}
+
+# Bill text
+# We comment out the code below because it does not complete.
+# We suspect that the bill_text files are too big to be uploaded this way.
+# We'll need to find a different way to upload the data to the SQL database.
+# for (i in 1990:2019) {
+#         data <- read.csv(paste("../../Data_files_backup/cleaned_bill_text_", i, ".csv", sep = ""))
+#         dbWriteTable(con, "Bill_text", data, append = TRUE)
+# }
 
 dbDisconnect(con)
 
